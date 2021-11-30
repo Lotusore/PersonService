@@ -2,6 +2,7 @@ package cds.personservice.service;
 
 import cds.personservice.entities.Person;
 import cds.personservice.repository.PersonRepository;
+import cds.personservice.repository.PersonRepositoryImpl;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,10 +13,10 @@ import java.util.List;
 @Service
 public class PersonService {
 
-    private PersonRepository personRepository;
+    private PersonRepositoryImpl personRepository;
 
     @Autowired
-    public PersonService(PersonRepository personRepository){
+    public PersonService(PersonRepositoryImpl personRepository){
         this.personRepository = personRepository;
     }
 
@@ -23,9 +24,11 @@ public class PersonService {
         if(StringUtils.isBlank(name) || StringUtils.isBlank(firstName)){
             throw new PersistenceException("Name and/or FirstName can't be empty");
         }
-        if(null != this.personRepository.getPerson(name,firstName)){
+
+        if(null != this.personRepository.findUniquePerson(name, firstName)){
             throw new PersistenceException("This person already exist in DataBase");
         }
+
         Person person = new Person();
         person.setFirstName(firstName);;
         person.setName(name);
@@ -38,15 +41,10 @@ public class PersonService {
     }
 
     public List<Person> getListFilteredPerson(String name, String firstName){
-        if(StringUtils.isBlank(name) && StringUtils.isBlank(firstName)){
-            return this.personRepository.findAll();
-        }else if(StringUtils.isNotBlank(name) && StringUtils.isBlank(firstName)){
-            return this.personRepository.getByName(name);
-        }else if(StringUtils.isNotBlank(firstName) && StringUtils.isBlank(name)){
-            return this.personRepository.getByFirstName(firstName);
-        }else{
-            return this.personRepository.getPerson(name,firstName);
-        }
+        Person person = new Person();
+        person.setFirstName(firstName);;
+        person.setName(name);
+        return this.personRepository.findPerson(person);
     }
 
     public void remove(Long id){
